@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# PyTorch checkpoints
+*.pt
+*.pth
+checkpoints/
+
+# Logs
+logs/
+*.log
+
+# Data
+data/raw/*
+data/processed/*
+
+# Keep folder structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Benchmarks
+benchmarks/results/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

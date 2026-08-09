@@ -2,7 +2,6 @@ class CharacterTokenizer:
     def __init__(self, text):
         self.text = text
         self.vocab = sorted(set(self.text))
-        self.vocab_size = len(self.vocab)
         self.char_to_idx = {
             char: idx 
             for idx, char in enumerate(self.vocab)
@@ -23,5 +22,7 @@ class CharacterTokenizer:
             return ''.join(self.idx_to_char[idx] for idx in ids)
         except KeyError as e:
             raise ValueError("Unknown index: {idx}".format(idx=e.args[0]))
+
+    def vocab_size(self):
 
    

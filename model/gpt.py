@@ -68,15 +68,19 @@ class AttentionHead(nn.Module):
 class Block(nn.Module):
     def __init__(self, config):
         super().__init__()
+
+        self.ln1 = nn.LayerNorm(config.embedding_dim)
         self.attention = AttentionHead(config)
 
+
+        self.ln2 = nn.LayerNorm(config.embedding_dim)
         self.mlp = nn.Sequential(
             nn.Linear(config.embedding_dim, 4 * config.embedding_dim),
             nn.GELU(),
             nn.Linear(4 * config.embedding_dim, config.embedding_dim),
             )
-        self.ln1 = nn.LayerNorm(config.embedding_dim)
-        self.ln2 = nn.LayerNorm(config.embedding_dim)
+        
+        
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x):

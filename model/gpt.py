@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from dataclasses import dataclass
 @dataclass
+
 class GPTConfig:
     vocab_size: int
     context_length: int = 16
@@ -15,21 +16,6 @@ class GPTConfig:
         if self.embedding_dim % self.num_heads != 0 :
             raise ValueError("embedding_dim must be divisible by num_heads")
 
-class GPT(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-
-        self.token_embedding = nn.Embedding(config.vocab_size, config.embedding_dim)
-        self.position_embedding = nn.Embedding(config.context_length, config.embedding_dim)
-
-    def forward(self, x):
-
-        _, T = x.size()
-        token_embeddings = self.token_embedding(x)
-        position_ids = torch.arange(T, device=x.device)
-        position_embeddings = self.position_embedding(position_ids)
-        embeddings = token_embeddings + position_embeddings
-        return embeddings
 
 class AttentionHead(nn.Module):
     def __init__(self, config):
@@ -63,7 +49,9 @@ class AttentionHead(nn.Module):
         wei = torch.nn.functional.softmax(wei, dim=-1)
         
         out = wei @ v
+        out = out.transpose(1, 2).contiguous().view(B, T, C)
         return out, wei
+    
 
 class Block(nn.Module):
     def __init__(self, config):
@@ -71,7 +59,7 @@ class Block(nn.Module):
 
         self.ln1 = nn.LayerNorm(config.embedding_dim)
         self.attention = AttentionHead(config)
-
+        
 
         self.ln2 = nn.LayerNorm(config.embedding_dim)
         self.mlp = nn.Sequential(
@@ -84,9 +72,44 @@ class Block(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x):
-        x = x + self.dropout(self.attention(self.ln1(x)))
+        attention_out, _ = self.attention(self.ln1(x))
+        x = x + self.dropout(attention_out)
         x = x + self.dropout(self.mlp(self.ln2(x)))
         return x
+
+
+class GPT(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+
+        self.token_embedding = nn.Embedding(config.vocab_size, config.embedding_dim)
+        self.position_embedding = nn.Embedding(config.context_length, config.embedding_dim)
+        
+        self.blocks = nn.ModuleList(
+            [Block(config) for _ in range(config.num_layers)]
+            )
+
+        self.ln_f = nn.LayerNorm(config.embedding_dim)
+
+        self.lm_head = nn.Linear(config.embedding_dim, config.vocab_size, bias=False)
+
+
+    def forward(self, x):
+
+        _, T = x.size()
+        token_embeddings = self.token_embedding(x)
+        position_ids = torch.arange(T, device=x.device)
+        position_embeddings = self.position_embedding(position_ids)
+        x = token_embeddings + position_embeddings
+
+        for block in self.blocks:
+            x = block(x)
+
+        x = self.ln_f(x)
+        logits = self.lm_head(x)
+        
+        return logits
+
 
 config = GPTConfig(50)
 model = GPT(config)

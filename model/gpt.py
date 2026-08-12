@@ -111,7 +111,7 @@ class GPT(nn.Module):
         logits = self.lm_head(x)
 
         loss = None
-        
+
         if targets is not None:
             loss = torch.nn.functional.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), reduction='mean')
 

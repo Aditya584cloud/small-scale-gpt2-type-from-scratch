@@ -33,7 +33,7 @@ loader = DataLoader(
 )
 
 model.train()
-for epoch in range(500):
+for i in range(500):
     for  x, targets in loader:
         optimizer.zero_grad()
 
@@ -43,7 +43,7 @@ for epoch in range(500):
         optimizer.step()
 
 
-        if epoch % 50 == 0:
+        if i % 50 == 0:
             print(loss.item())
 
 

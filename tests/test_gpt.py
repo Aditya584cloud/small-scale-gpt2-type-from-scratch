@@ -11,7 +11,7 @@ class TestGPT(unittest.TestCase):
 
     def test_embedding_output_shape(self):
         x = torch.randint(0, self.config.vocab_size, (2, self.config.context_length))
-        output = self.model(x)
+        output, _ = self.model(x)
         self.assertEqual(output.shape, (2, self.config.context_length, self.config.vocab_size))
 
     def test_masking(self):
@@ -44,13 +44,83 @@ class TestGPT(unittest.TestCase):
             (2, self.config.context_length)
         )
 
-        logits = self.model(x)
+        logits, loss = self.model(x, targets=x)
 
         self.assertEqual(
             logits.shape,
             (2, self.config.context_length, self.config.vocab_size)
         )
     
+    def test_loss(self):
+        x = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        y = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        logits, loss = self.model(x, targets=y)
+
+        self.assertTrue(torch.isfinite(loss))
+        self.assertGreater(loss.item(), 0.0)
+
+    def test_gpt_with_targets(self):
+        x = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        targets = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        logits, loss = self.model(x, targets)
+
+        self.assertEqual(
+            logits.shape,
+            (2, self.config.context_length, self.config.vocab_size)
+        )
+
+        self.assertTrue(torch.isfinite(loss))
+
+    def test_training_step(self):
+        x = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        targets = torch.randint(
+            0,
+            self.config.vocab_size,
+            (2, self.config.context_length)
+        )
+
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(),
+            lr=1e-3
+        )
+
+        before = self.model.token_embedding.weight.detach().clone()
+
+        logits, loss = self.model(x, targets)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        after = self.model.token_embedding.weight.detach()
+
+        self.assertFalse(torch.equal(before, after))
+        
 if __name__ == '__main__':
     unittest.main()
 

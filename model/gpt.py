@@ -94,12 +94,14 @@ class GPT(nn.Module):
         self.lm_head = nn.Linear(config.embedding_dim, config.vocab_size, bias=False)
 
 
-    def forward(self, x):
+    def forward(self, x, targets = None):
 
         _, T = x.size()
         token_embeddings = self.token_embedding(x)
+
         position_ids = torch.arange(T, device=x.device)
         position_embeddings = self.position_embedding(position_ids)
+
         x = token_embeddings + position_embeddings
 
         for block in self.blocks:
@@ -107,8 +109,13 @@ class GPT(nn.Module):
 
         x = self.ln_f(x)
         logits = self.lm_head(x)
+
+        loss = None
         
-        return logits
+        if targets is not None:
+            loss = torch.nn.functional.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), reduction='mean')
+
+        return logits, loss
 
 
 config = GPTConfig(50)

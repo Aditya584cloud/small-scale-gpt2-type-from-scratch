@@ -49,36 +49,62 @@ val_loader = DataLoader(
     shuffle = True
 )
 
+def evaluate(model, val_loader):
+    model.eval()
+    total_loss_val = 0
+    with torch.no_grad():
+        for x, targets in val_loader:
+            
+            logits, loss_val = model(x, targets)
 
-for epoch in range(50):
-    epoch_loss_train = 0
-    epoch_loss_val = 0
+            total_loss_val += loss_val.item()
+        
+        av_loss_val = total_loss_val / len(val_loader)
+        
 
+    return av_loss_val
+
+def train(model, optimizer, train_loader):
     model.train()
+    total_loss_train = 0
     for  x, targets in train_loader:
         
         optimizer.zero_grad()
 
         logits, loss_train = model(x, targets)
 
-        epoch_loss_train += loss_train.item()
-        
-
+        total_loss_train += loss_train.item()
         loss_train.backward()
         optimizer.step()
 
-    model.eval()
-    with torch.no_grad():
-        for x, targets in val_loader:
-            
-            logits, loss_val = model(x, targets)
+    
 
-            epoch_loss_val += loss_val.item()
+    av_loss_train = total_loss_train / len(train_loader)
+    
+    return av_loss_train
 
-    av_loss_train = epoch_loss_train / len(train_loader)
-    av_loss_val = epoch_loss_val / len(val_loader)
+
+for epoch in range(100):
+    
+    train_loss = train(model,optimizer, train_loader)
+    val_loss = evaluate(model, val_loader)
+   
+    
     if epoch % 50 == 0:
-        print(f"step {epoch}: train loss {av_loss_train}, val loss {av_loss_val}")
+        print(f"step {epoch}: train loss {train_loss}, val loss {val_loss}")
 
-torch.save(model.state_dict(), "checkpoints/gpt_v0.pt")
-print("Model Saved")
+
+
+checkpoint = {
+    "model_state": model.state_dict(),
+    "config": {
+        "vocab_size": config.vocab_size,
+        "context_length": config.context_length,
+        "embedding_dim": config.embedding_dim,
+        "num_heads": config.num_heads,
+        "num_layers": config.num_layers,
+        "dropout": config.dropout,
+    },
+}
+
+torch.save(checkpoint, "checkpoints/gpt_v2.pt")

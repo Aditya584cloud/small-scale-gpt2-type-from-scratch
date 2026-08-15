@@ -1,6 +1,6 @@
 import torch
 from model.gpt import GPT, GPTConfig
-from datasets.gpt_dataset import GPTDataset
+from dataset.gpt_dataset import GPTDataset
 from tokenizer.character import CharacterTokenizer
 from torch.utils.data import DataLoader
 

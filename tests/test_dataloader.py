@@ -2,7 +2,7 @@ import torch
 import unittest
 from torch.utils.data import DataLoader
 from tokenizer.character import CharacterTokenizer
-from datasets.gpt_dataset import GPTDataset
+from dataset.gpt_dataset import GPTDataset
 
 class TestDataloader(unittest.TestCase):
     def test_dataloader(self):

@@ -1,5 +1,5 @@
 import unittest
-from datasets.gpt_dataset import GPTDataset
+from dataset.gpt_dataset import GPTDataset
 import torch
 
 class TestGPTDataset(unittest.TestCase):

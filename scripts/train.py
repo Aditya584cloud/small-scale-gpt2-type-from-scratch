@@ -84,7 +84,7 @@ def train(model, optimizer, train_loader):
     return av_loss_train
 
 
-for epoch in range(100):
+for epoch in range(1000):
     
     train_loss = train(model,optimizer, train_loader)
     val_loss = evaluate(model, val_loader)

@@ -118,6 +118,3 @@ class GPT(nn.Module):
         return logits, loss
 
 
-config = GPTConfig(50)
-model = GPT(config)
-
